@@ -44,20 +44,20 @@ def filter_by_date(df: pd.DataFrame, date_range: tuple):
 # set page level title
 ui.page_opts(title='US Housing App')
 
-# for state selection via 'input select'
+# varibles for state selection
 state_choices = new_listings_df['StateName'].dropna().drop_duplicates().sort_values().tolist()
 state_choices = ['United States'] + state_choices
 
-# for date range selection via 'input slider'
+# variables for date selection
 date_columns = new_listings_df.columns[5:]
 min_date, max_date = string_to_date(date_columns[0]), string_to_date(date_columns[-1])
 
 # sidebar
 with ui.sidebar():
-    # ui 'input select' for selecting state
+    # ui input select for selecting state
     ui.input_select('state', 'Filter by State', choices=state_choices)
 
-    # ui 'input slider' for selecting date range
+    # ui input slider for selecting date range
     ui.input_slider(
         'date_range', 
         'Filter by Date Range',
@@ -69,9 +69,10 @@ with ui.sidebar():
     # toggle dark mode
     ui.input_dark_mode()
 
-
+# navset for 'Median List Price'
 with ui.navset_card_underline(title='Median List Price'):
 
+    # nav panel with plot
     with ui.nav_panel(title='Plot', icon=icon_svg('chart-line')):
 
         # Plotly visualization of median home price per state
@@ -99,6 +100,7 @@ with ui.navset_card_underline(title='Median List Price'):
             
             return fig
 
+    # nav panel with data
     with ui.nav_panel(title='Data', icon=icon_svg('table')):
 
         @render.data_frame
@@ -110,9 +112,10 @@ with ui.navset_card_underline(title='Median List Price'):
 
             return render.DataGrid(df)
 
-
+# navset for 'Home Inventory'
 with ui.navset_card_underline(title='Home Inventory'):
 
+    # nav panel with plot
     with ui.nav_panel(title='Plot', icon=icon_svg('chart-line')):
 
         # Plotly visualization of homes for sale per state
@@ -140,6 +143,7 @@ with ui.navset_card_underline(title='Home Inventory'):
 
             return fig
 
+    # nav panel with data
     with ui.nav_panel(title='Data', icon=icon_svg('table')):
 
         @render.data_frame
@@ -151,9 +155,10 @@ with ui.navset_card_underline(title='Home Inventory'):
 
             return render.DataGrid(df)
 
-
+# navset for 'New Listings'
 with ui.navset_card_underline(title='New Listings'):
 
+    # nav panel with plot
     with ui.nav_panel('Plot', icon=icon_svg('chart-line')):
 
         # Plotly visualization of listings per state
@@ -181,6 +186,7 @@ with ui.navset_card_underline(title='New Listings'):
             
             return fig
 
+    # nav panel with data
     with ui.nav_panel(title='Data', icon=icon_svg('table')):
 
         @render.data_frame
