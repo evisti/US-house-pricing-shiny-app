@@ -8,6 +8,10 @@ from shiny import reactive
 from shiny.express import input, render, ui
 from shinywidgets import render_plotly
 
+# ignore PerformanceWarning as it pops up SO MANY TIMES
+from warnings import simplefilter
+simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
+
 
 # ---------------------------------------------------------------------
 # Read in Files
@@ -36,27 +40,39 @@ def filter_by_date(df: pd.DataFrame, date_range: tuple):
 # Visualizations
 # ---------------------------------------------------------------------
 
-# ui input for selecting state
+# set page level title
+ui.page_opts(title='US Housing App')
+
+# for state selection via 'input select'
 state_choices = new_listings_df['StateName'].dropna().drop_duplicates().sort_values().tolist()
 state_choices = ['United States'] + state_choices
-ui.input_select('state', 'Filter by State', choices=state_choices)
 
-# ui input slider for selecting date range
+# for date range selection via 'input slider'
 date_columns = new_listings_df.columns[5:]
 min_date, max_date = string_to_date(date_columns[0]), string_to_date(date_columns[-1])
-ui.input_slider(
-    'date_range', 
-    'Filter by Date Range',
-    min=min_date,
-    max=max_date,
-    value=[min_date, max_date]
-)
+
+# sidebar
+with ui.sidebar():
+    # ui 'input select' for selecting state
+    ui.input_select('state', 'Filter by State', choices=state_choices)
+
+    # ui 'input slider' for selecting date range
+    ui.input_slider(
+        'date_range', 
+        'Filter by Date Range',
+        min=min_date,
+        max=max_date,
+        value=[min_date, max_date]
+    )
+
+    # toggle dark mode
+    ui.input_dark_mode()
 
 # Plotly visualization of median home price per state
 @render_plotly
 def list_price_plot():
     # group by state name and specify the date columns
-    price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)     
+    price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)
     date_columns = median_listing_price_df.columns[5:]
     price_grouped_dates = price_grouped[date_columns].reset_index()   
     price_df_for_viz = price_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
