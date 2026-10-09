@@ -10,7 +10,7 @@ from shinywidgets import render_plotly
 
 
 # ---------------------------------------------------------------------
-# Reading in Files
+# Read in Files
 # ---------------------------------------------------------------------
 
 median_listing_price_df = pd.read_csv(Path(__file__).parent / 'data/Metro_mlp_uc_sfrcondo_sm_month.csv')
@@ -22,39 +22,55 @@ new_listings_df = pd.read_csv(Path(__file__).parent / 'data/Metro_new_listings_u
 # Helper functions - converting to DateTime
 # ---------------------------------------------------------------------
 
-def string_to_date(date_string: str) -> datetime.date:
-    return datetime.strptime(date_string, format='%Y-%m-%d').date()
+def string_to_date(date_str: str) -> datetime.date:
+    date_format = "%Y-%m-%d"
+    return datetime.strptime(date_str, date_format).date()
 
 def filter_by_date(df: pd.DataFrame, date_range: tuple):
-    rng = sorted(date_range)
+    sorted_range = sorted(date_range)
     dates = pd.to_datetime(df['Date'], format='%Y-%m-%d').dt.date
-    return df[(dates >= rng[0]) & (dates <= rng[1])]
+    return df[(dates >= sorted_range[0]) & (dates <= sorted_range[1])]
 
 
 # ---------------------------------------------------------------------
 # Visualizations
 # ---------------------------------------------------------------------
 
+# ui input for selecting state
 state_choices = new_listings_df['StateName'].dropna().drop_duplicates().sort_values().tolist()
 state_choices = ['United States'] + state_choices
-
 ui.input_select('state', 'Filter by State', choices=state_choices)
 
-# Plotly visualization of Median Home Price Per State
+# ui input slider for selecting date range
+date_columns = new_listings_df.columns[5:]
+min_date, max_date = string_to_date(date_columns[0]), string_to_date(date_columns[-1])
+ui.input_slider(
+    'date_range', 
+    'Filter by Date Range',
+    min=min_date,
+    max=max_date,
+    value=[min_date, max_date]
+)
+
+# Plotly visualization of median home price per state
 @render_plotly
 def list_price_plot():
-    # Grouping by State Name and specifying the Date Columns
+    # group by state name and specify the date columns
     price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)     
     date_columns = median_listing_price_df.columns[5:]
     price_grouped_dates = price_grouped[date_columns].reset_index()   
     price_df_for_viz = price_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
+    # input select
     if input.state() == 'United States':
         df = price_df_for_viz
     else:
         df = price_df_for_viz[price_df_for_viz['StateName'] == input.state()]
 
-    # Creating Visualization using Plotly
+    # input slider
+    df = filter_by_date(df, input.date_range())    
+
+    # create visualization using Plotly
     fig = px.line(df, x='Date', y='Value', color='StateName')
     fig.update_xaxes(title_text='')
     fig.update_yaxes(title_text='')
@@ -71,21 +87,25 @@ def list_price_data():
     return render.DataGrid(df)
 
 
-# Plotly visualization of Homes For Sale Per State
+# Plotly visualization of homes for sale per state
 @render_plotly
 def for_sale_plot():
-    # Grouping by State Name and specifying the Date Columns
+    # group by state name and specify the date columns
     df2_grouped = for_sale_inventory_df.groupby('StateName').sum(numeric_only=True)
     date_columns = for_sale_inventory_df.columns[5:]
     df2_grouped_dates = df2_grouped[date_columns].reset_index()
     df2_melted = df2_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
+    # input select
     if input.state() == 'United States':
         df = df2_melted
     else:
         df = df2_melted[df2_melted['StateName'] == input.state()]
 
-    # Creating Visualization using Plotly
+    # input slider
+    df = filter_by_date(df, input.date_range())  
+
+    # create visualization using Plotly
     fig = px.line(df, x='Date', y='Value', color='StateName')
     fig.update_xaxes(title_text='')
     fig.update_yaxes(title_text='')
@@ -102,21 +122,25 @@ def for_sale_data():
     return render.DataGrid(df)
 
 
-# Plotly visualization of Listings Per State
+# Plotly visualization of listings per state
 @render_plotly
 def listings_plot():
-    # Grouping by State Name and specifying the Date Columns
+    # group by state name and specify the date columns
     df3_grouped = new_listings_df.groupby('StateName').sum(numeric_only=True)
     date_columns = new_listings_df.columns[5:]
     df3_grouped_dates = df3_grouped[date_columns].reset_index()
     df3_melted = df3_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
+    # input select
     if input.state() == 'United States':
         df = df3_melted
     else:
         df = df3_melted[df3_melted['StateName'] == input.state()]
 
-    # Creating Visualization using Plotly
+    # input slider
+    df = filter_by_date(df, input.date_range())  
+
+    # create visualization using Plotly
     fig = px.line(df, x='Date', y='Value', color='StateName')
     fig.update_xaxes(title_text='')
     fig.update_yaxes(title_text='')
