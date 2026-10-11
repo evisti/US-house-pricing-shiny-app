@@ -27,26 +27,26 @@ new_listings_df = pd.read_csv(Path(__file__).parent / 'data/Metro_new_listings_u
 # Data Transformation
 # -------------------------------------------------------------------------
 
-# the date columns
+# the date columns (maybe make all date columns into datetime)
 date_columns = new_listings_df.columns[5:]
 
 # Group by state name
 
 # median list price
+median_listing_price_df['StateName'] = median_listing_price_df['StateName'].fillna(median_listing_price_df['RegionName'])
 price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)
-#date_columns = median_listing_price_df.columns[5:]
 price_grouped_dates = price_grouped[date_columns].reset_index()   
 price_df_for_viz = price_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
 # home inventory
+for_sale_inventory_df['StateName'] = for_sale_inventory_df['StateName'].fillna(for_sale_inventory_df['RegionName'])
 inventory_grouped = for_sale_inventory_df.groupby('StateName').sum(numeric_only=True)
-#date_columns = for_sale_inventory_df.columns[5:]
 inventory_grouped_dates = inventory_grouped[date_columns].reset_index()
 inventory_df_for_viz = inventory_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
 # new listings
+new_listings_df['StateName'] = new_listings_df['StateName'].fillna(new_listings_df['RegionName'])
 listings_grouped = new_listings_df.groupby('StateName').sum(numeric_only=True)
-#date_columns = new_listings_df.columns[5:]
 listings_grouped_dates = listings_grouped[date_columns].reset_index()
 listings_df_for_viz = listings_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
 
@@ -96,6 +96,30 @@ with ui.sidebar():
     # toggle dark mode
     ui.input_dark_mode()
 
+# value boxes
+with ui.layout_column_wrap():
+
+    with ui.value_box(showcase=icon_svg('dollar-sign')):
+        'Current Median List Price'
+        @render.ui
+        def price():
+            df = price_df_for_viz[price_df_for_viz['StateName'] == input.state()]
+            last_value = df.iloc[-1, -1]
+
+            return f'${last_value / 1000:.0f}K'
+
+    with ui.value_box(showcase=icon_svg('house')):
+        'Latest Home Inventory Change'
+        @render.ui
+        def change():
+            df = inventory_df_for_viz[inventory_df_for_viz['StateName'] == input.state()]
+            last_value = df.iloc[-1, -1]
+            second_last_value = df.iloc[-2, -1]
+            percentage_change = (last_value - second_last_value) / second_last_value * 100
+            sign = '+' if percentage_change > 0 else ''
+
+            return f'{sign}{percentage_change:.2f} %'
+
 # navset for 'Median List Price'
 with ui.navset_card_underline(title='Median List Price'):
 
@@ -106,10 +130,7 @@ with ui.navset_card_underline(title='Median List Price'):
         @render_plotly
         def list_price_plot():
             # input select
-            if input.state() == 'United States':
-                df = price_df_for_viz
-            else:
-                df = price_df_for_viz[price_df_for_viz['StateName'] == input.state()]
+            df = price_df_for_viz[price_df_for_viz['StateName'] == input.state()]
 
             # input slider
             df = filter_by_date(df, input.date_range())    
@@ -126,11 +147,7 @@ with ui.navset_card_underline(title='Median List Price'):
 
         @render.data_frame
         def list_price_data():
-            if input.state() == 'United States':
-                df = median_listing_price_df
-            else:
-                df = median_listing_price_df[median_listing_price_df['StateName'] == input.state()]
-
+            df = median_listing_price_df[median_listing_price_df['StateName'] == input.state()]
             return render.DataGrid(df)
 
 # navset for 'Home Inventory'
@@ -143,10 +160,7 @@ with ui.navset_card_underline(title='Home Inventory'):
         @render_plotly
         def for_sale_plot():
             # input select
-            if input.state() == 'United States':
-                df = inventory_df_for_viz
-            else:
-                df = inventory_df_for_viz[inventory_df_for_viz['StateName'] == input.state()]
+            df = inventory_df_for_viz[inventory_df_for_viz['StateName'] == input.state()]
 
             # input slider
             df = filter_by_date(df, input.date_range())  
@@ -163,11 +177,7 @@ with ui.navset_card_underline(title='Home Inventory'):
 
         @render.data_frame
         def for_sale_data():
-            if input.state() == 'United States':
-                df = for_sale_inventory_df
-            else:
-                df = for_sale_inventory_df[for_sale_inventory_df['StateName'] == input.state()]
-
+            df = for_sale_inventory_df[for_sale_inventory_df['StateName'] == input.state()]
             return render.DataGrid(df)
 
 # navset for 'New Listings'
@@ -180,10 +190,7 @@ with ui.navset_card_underline(title='New Listings'):
         @render_plotly
         def listings_plot():
             # input select
-            if input.state() == 'United States':
-                df = listings_df_for_viz
-            else:
-                df = listings_df_for_viz[listings_df_for_viz['StateName'] == input.state()]
+            df = listings_df_for_viz[listings_df_for_viz['StateName'] == input.state()]
 
             # input slider
             df = filter_by_date(df, input.date_range())  
@@ -200,9 +207,5 @@ with ui.navset_card_underline(title='New Listings'):
 
         @render.data_frame
         def listings_data():
-            if input.state() == 'United States':
-                df = new_listings_df
-            else:
-                df = new_listings_df[new_listings_df['StateName'] == input.state()]
-
+            df = new_listings_df[new_listings_df['StateName'] == input.state()]
             return render.DataGrid(df)
