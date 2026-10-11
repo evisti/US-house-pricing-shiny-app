@@ -86,12 +86,12 @@ min_date, max_date = string_to_date(date_columns[0]), string_to_date(date_column
 # sidebar
 with ui.sidebar():
     # ui input select for selecting state
-    ui.input_select('state', 'Filter by State', choices=state_choices)
+    ui.input_select('state', 'Select State', choices=state_choices)
 
     # ui input slider for selecting date range
     ui.input_slider(
         'date_range', 
-        'Filter by Date Range',
+        'Select Date Range',
         min=min_date,
         max=max_date,
         value=[min_date, max_date]
