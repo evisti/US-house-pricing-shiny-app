@@ -14,18 +14,46 @@ from warnings import simplefilter
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Read in Files
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 median_listing_price_df = pd.read_csv(Path(__file__).parent / 'data/Metro_mlp_uc_sfrcondo_sm_month.csv')
 for_sale_inventory_df = pd.read_csv(Path(__file__).parent / 'data/Metro_invt_fs_uc_sfrcondo_sm_month.csv')
 new_listings_df = pd.read_csv(Path(__file__).parent / 'data/Metro_new_listings_uc_sfrcondo_sm_month.csv')
 
 
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Data Transformation
+# -------------------------------------------------------------------------
+
+# the date columns
+date_columns = new_listings_df.columns[5:]
+
+# Group by state name
+
+# median list price
+price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)
+#date_columns = median_listing_price_df.columns[5:]
+price_grouped_dates = price_grouped[date_columns].reset_index()   
+price_df_for_viz = price_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
+
+# home inventory
+inventory_grouped = for_sale_inventory_df.groupby('StateName').sum(numeric_only=True)
+#date_columns = for_sale_inventory_df.columns[5:]
+inventory_grouped_dates = inventory_grouped[date_columns].reset_index()
+inventory_df_for_viz = inventory_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
+
+# new listings
+listings_grouped = new_listings_df.groupby('StateName').sum(numeric_only=True)
+#date_columns = new_listings_df.columns[5:]
+listings_grouped_dates = listings_grouped[date_columns].reset_index()
+listings_df_for_viz = listings_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
+
+
+# -------------------------------------------------------------------------
 # Helper functions - converting to DateTime
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 def string_to_date(date_str: str) -> datetime.date:
     date_format = "%Y-%m-%d"
@@ -37,16 +65,15 @@ def filter_by_date(df: pd.DataFrame, date_range: tuple):
     return df[(dates >= sorted_range[0]) & (dates <= sorted_range[1])]
 
 
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Visualizations
-# ---------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 # set page level title
 ui.page_opts(title='US Housing App')
 
 # varibles for state selection
-state_choices = new_listings_df['StateName'].dropna().drop_duplicates().sort_values().tolist()
-state_choices = ['United States'] + state_choices
+state_choices = ['United States'] + new_listings_df['StateName'].dropna().drop_duplicates().sort_values().tolist()
 
 # variables for date selection
 date_columns = new_listings_df.columns[5:]
@@ -78,12 +105,6 @@ with ui.navset_card_underline(title='Median List Price'):
         # Plotly visualization of median home price per state
         @render_plotly
         def list_price_plot():
-            # group by state name and specify the date columns
-            price_grouped = median_listing_price_df.groupby('StateName').mean(numeric_only=True)
-            date_columns = median_listing_price_df.columns[5:]
-            price_grouped_dates = price_grouped[date_columns].reset_index()   
-            price_df_for_viz = price_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
-
             # input select
             if input.state() == 'United States':
                 df = price_df_for_viz
@@ -121,17 +142,11 @@ with ui.navset_card_underline(title='Home Inventory'):
         # Plotly visualization of homes for sale per state
         @render_plotly
         def for_sale_plot():
-            # group by state name and specify the date columns
-            df2_grouped = for_sale_inventory_df.groupby('StateName').sum(numeric_only=True)
-            date_columns = for_sale_inventory_df.columns[5:]
-            df2_grouped_dates = df2_grouped[date_columns].reset_index()
-            df2_melted = df2_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
-
             # input select
             if input.state() == 'United States':
-                df = df2_melted
+                df = inventory_df_for_viz
             else:
-                df = df2_melted[df2_melted['StateName'] == input.state()]
+                df = inventory_df_for_viz[inventory_df_for_viz['StateName'] == input.state()]
 
             # input slider
             df = filter_by_date(df, input.date_range())  
@@ -164,17 +179,11 @@ with ui.navset_card_underline(title='New Listings'):
         # Plotly visualization of listings per state
         @render_plotly
         def listings_plot():
-            # group by state name and specify the date columns
-            df3_grouped = new_listings_df.groupby('StateName').sum(numeric_only=True)
-            date_columns = new_listings_df.columns[5:]
-            df3_grouped_dates = df3_grouped[date_columns].reset_index()
-            df3_melted = df3_grouped_dates.melt(id_vars=['StateName'], var_name='Date', value_name='Value')
-
             # input select
             if input.state() == 'United States':
-                df = df3_melted
+                df = listings_df_for_viz
             else:
-                df = df3_melted[df3_melted['StateName'] == input.state()]
+                df = listings_df_for_viz[listings_df_for_viz['StateName'] == input.state()]
 
             # input slider
             df = filter_by_date(df, input.date_range())  
