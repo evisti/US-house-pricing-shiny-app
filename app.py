@@ -31,7 +31,7 @@ new_listings_df = pd.read_csv(app_dir / 'data/Metro_new_listings_uc_sfrcondo_sm_
 # Data Transformation
 # -------------------------------------------------------------------------
 
-# the date columns (maybe make all date columns into datetime)
+# the date columns
 date_columns = new_listings_df.columns[5:]
 
 # Group by state name
@@ -84,7 +84,8 @@ date_columns = new_listings_df.columns[5:]
 min_date, max_date = string_to_date(date_columns[0]), string_to_date(date_columns[-1])
 
 # sidebar
-with ui.sidebar():
+with ui.sidebar(gap='2rem'):
+
     # ui input select for selecting state
     ui.input_select('state', 'Select State', choices=state_choices)
 
@@ -97,6 +98,9 @@ with ui.sidebar():
         value=[min_date, max_date]
     )
 
+    # link to data source
+    ui.div('Data: ', ui.tags.a('Zillow Research', href='https://www.zillow.com/research/data/'))
+    
     # toggle dark mode
     ui.input_dark_mode()
 
