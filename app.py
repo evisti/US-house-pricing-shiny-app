@@ -127,6 +127,9 @@ with ui.layout_column_wrap():
 # navset for 'Median List Price'
 with ui.navset_card_underline(title='Median List Price'):
 
+    # add spacer
+    ui.nav_spacer()
+
     # nav panel with plot
     with ui.nav_panel(title='Plot', icon=icon_svg('chart-line')):
 
@@ -160,6 +163,9 @@ with ui.navset_card_underline(title='Median List Price'):
 # navset for 'Home Inventory'
 with ui.navset_card_underline(title='Home Inventory'):
 
+    # add spacer
+    ui.nav_spacer()
+
     # nav panel with plot
     with ui.nav_panel(title='Plot', icon=icon_svg('chart-line')):
 
@@ -192,6 +198,9 @@ with ui.navset_card_underline(title='Home Inventory'):
 
 # navset for 'New Listings'
 with ui.navset_card_underline(title='New Listings'):
+
+    # add spacer
+    ui.nav_spacer()
 
     # nav panel with plot
     with ui.nav_panel('Plot', icon=icon_svg('chart-line')):
