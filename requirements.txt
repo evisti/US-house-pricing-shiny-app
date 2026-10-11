@@ -1,3 +1,4 @@
+faicons
 pandas
 plotly
 shiny
