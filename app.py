@@ -5,7 +5,7 @@ from datetime import datetime
 from faicons import icon_svg
 from pathlib import Path
 
-from shiny import reactive
+#from shiny import reactive
 from shiny.express import input, render, ui
 from shinywidgets import render_plotly
 
@@ -18,9 +18,13 @@ simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 # Read in Files
 # -------------------------------------------------------------------------
 
-median_listing_price_df = pd.read_csv(Path(__file__).parent / 'data/Metro_mlp_uc_sfrcondo_sm_month.csv')
-for_sale_inventory_df = pd.read_csv(Path(__file__).parent / 'data/Metro_invt_fs_uc_sfrcondo_sm_month.csv')
-new_listings_df = pd.read_csv(Path(__file__).parent / 'data/Metro_new_listings_uc_sfrcondo_sm_month.csv')
+# the directory containing this file
+app_dir = Path(__file__).parent
+
+# read files
+median_listing_price_df = pd.read_csv(app_dir / 'data/Metro_mlp_uc_sfrcondo_sm_month.csv')
+for_sale_inventory_df = pd.read_csv(app_dir / 'data/Metro_invt_fs_uc_sfrcondo_sm_month.csv')
+new_listings_df = pd.read_csv(app_dir / 'data/Metro_new_listings_uc_sfrcondo_sm_month.csv')
 
 
 # -------------------------------------------------------------------------
@@ -139,6 +143,7 @@ with ui.navset_card_underline(title='Median List Price'):
             fig = px.line(df, x='Date', y='Value', color='StateName')
             fig.update_xaxes(title_text='')
             fig.update_yaxes(title_text='')
+            fig.update_layout(showlegend=False)
             
             return fig
 
@@ -148,6 +153,8 @@ with ui.navset_card_underline(title='Median List Price'):
         @render.data_frame
         def list_price_data():
             df = median_listing_price_df[median_listing_price_df['StateName'] == input.state()]
+            df = df.drop(columns=['RegionType', 'StateName', 'RegionID', 'SizeRank'])
+            df = df.sort_values('RegionName')
             return render.DataGrid(df)
 
 # navset for 'Home Inventory'
@@ -169,6 +176,7 @@ with ui.navset_card_underline(title='Home Inventory'):
             fig = px.line(df, x='Date', y='Value', color='StateName')
             fig.update_xaxes(title_text='')
             fig.update_yaxes(title_text='')
+            fig.update_layout(showlegend=False)
 
             return fig
 
@@ -178,6 +186,8 @@ with ui.navset_card_underline(title='Home Inventory'):
         @render.data_frame
         def for_sale_data():
             df = for_sale_inventory_df[for_sale_inventory_df['StateName'] == input.state()]
+            df = df.drop(columns=['RegionType', 'StateName', 'RegionID', 'SizeRank'])
+            df = df.sort_values('RegionName')
             return render.DataGrid(df)
 
 # navset for 'New Listings'
@@ -199,6 +209,7 @@ with ui.navset_card_underline(title='New Listings'):
             fig = px.line(df, x='Date', y='Value', color='StateName')
             fig.update_xaxes(title_text='')
             fig.update_yaxes(title_text='')
+            fig.update_layout(showlegend=False)
             
             return fig
 
@@ -208,4 +219,6 @@ with ui.navset_card_underline(title='New Listings'):
         @render.data_frame
         def listings_data():
             df = new_listings_df[new_listings_df['StateName'] == input.state()]
+            df = df.drop(columns=['RegionType', 'StateName', 'RegionID', 'SizeRank'])
+            df = df.sort_values('RegionName')
             return render.DataGrid(df)
